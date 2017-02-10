@@ -67,6 +67,10 @@
 				$('#shareUserEmail').on('keyup', function(){
 					if (this.value.length > 0) {
 						$('#shareButton').text('Share');
+						$("#shareUserEditPermissions").prop('disabled', false);
+					} else {
+						$('#shareUserEditPermissions').prop("checked", false);
+						$("#shareUserEditPermissions").prop('disabled', true);
 					} 			
 				});
 
@@ -117,7 +121,9 @@
 				$("#shareDialog").on('show.uk.modal', function() {
 					console.log("Shown");
 				})
+
 				updateCount();
+				$("#shareUserEditPermissions").prop('disabled', true);
 			})
 
 
