@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+       <!--  <link rel="stylesheet" href="custom/css/style.css" /> -->
+        <!-- <link rel="stylesheet" href="custom/css/styles.css" /> -->
+        <link rel="stylesheet" href="css/uikit.min.css" />
+        <link rel="stylesheet" href="custom/css/theme.css" />
+        <!-- <link rel="stylesheet" href="custom/css/style.css" /> -->
+        
+        <script src="js/jquery.min.js"></script>
+		<script src="js/uikit.min.js"></script>
+		
+		<script type="text/javascript">
+			function showExpandedView() {
+				$(".mpl-simple-sharing-view").hide();
+				$(".mpl-advanced-sharing-view").show();
+			}
+			function showSimpleView() {
+				$(".mpl-simple-sharing-view").show();
+				$(".mpl-advanced-sharing-view").hide();
+			}
+			function updateCount() {
+				var count = $('#userPermissionsTable tbody tr').length;
+				$('#numberOfSharedUsers').text(count);
+			}
+			function enableSaveChanges() {
+				$('#shareButton').text('Save changes');
+				$('#shareUserEmail').attr('disabled', true);
+				$('#shareUserEditPermissions').attr('disabled', true);
+
+			}
+
+			function saveChanges() {
+				$('#userPermissionsTable tr :disabled').closest('tr').remove();
+				var user = $('#shareUserEmail').val();
+				if (user.length > 0) {
+					$('#shareButton').text('Share');
+				} else {
+					$('#shareButton').text('Done');
+				}
+				updateCount();
+				$('#shareUserEmail').attr('disabled', false);
+				$('#shareUserEditPermissions').attr('disabled', false);
+			}
+
+			//This should go in init
+			$(document).ready(function() {
+				$("#userPermissionsTable").on('click', '.mpl-permissions-remove', function(){
+					var row = $(this).closest('tr');
+					row.attr("disabled", true);
+					$(row).find('.mpl-user-perm-table-row-action-item').prop('disabled', true);
+					enableSaveChanges();
+					//updateCount();
+				});
+
+				$('.mpl-user-perm-table-row-action-item-checkbox').on('change', function(){
+					enableSaveChanges();
+				})
+
+				$('#shareUserEmail').on('keyup', function(){
+					if (this.value.length > 0) {
+						$('#shareButton').text('Share');
+					} 			
+				});
+
+				$('#shareButton').on('click', function(){
+					if ($('#shareButton').text() === "Share") {
+						var user = $('#shareUserEmail').val();
+						if (user.length === 0) return;
+
+						var userLabel = "<label class='mpl-user-perm-table-row-action-item'>" + user + "</label>";
+
+						 //throw validation error
+						var editPermissions = $('#shareUserEditPermissions').is(":checked");
+						var editText;
+						var editCheckbox;
+
+						if (editPermissions === true) {
+							editText = " Can edit";
+							editCheckbox = "<input type='checkbox' class='mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox' checked>";
+						} else {
+							editText = " ";
+							editCheckbox = "<input type='checkbox'>";
+						}
+
+						$('#userPermissionsTable').append("<tr>"+ "<td>" + userLabel + "</td>"+ 
+							"<td>" + editCheckbox + editText + "</td>"+ 
+							"<td><button class='uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item'><i class='uk-icon-trash-o' /> Remove</button></td>" +
+							"</tr>");
+
+						$('#shareUserEmail').val('');
+						$('#shareUserEditPermissions').prop("checked", false);
+						$('#shareButton').text('Done');
+
+						updateCount();
+
+					} else if ($('#shareButton').text() === "Done") {
+						$('#shareButton').text('Share');
+						$('#shareButton').addClass('uk-modal-close');
+						
+					} else if ($('#shareButton').text() === "Save changes"){
+						saveChanges();
+					}
+					
+				});
+
+				$("#shareDialog").on('hide.uk.modal', function() {
+					$('#shareButton').removeClass('uk-modal-close');
+				})
+
+				$("#shareDialog").on('show.uk.modal', function() {
+					console.log("Shown");
+				})
+				updateCount();
+			})
+
+
+			
+		</script>
+		
+    </head>
+    <body>
+		
+		
+		<button class="uk-button uk-button-mini mpl-button-mini" title="Download"><i class="uk-icon-cloud-download"></i><span class="uk-hidden-small mpl-icon-text-padding">DOWNLOAD</span></button>
+
+		<button class="uk-button" data-uk-modal="{target:'#shareDialog'}">Share</button>
+	
+
+ 		<div id="shareDialog" class="uk-modal">
+		    <div class="uk-modal-dialog">
+		    	<button type="button" class="uk-modal-close uk-close"></button>
+				<div class="uk-modal-header">
+				    <h4>Share with others <img src="images/help_green.png"/></h4>
+				</div>
+		    	<div class="uk-form uk-form-horizontal">
+		            <fieldset class="uk-form-controls-condensed" data-uk-margin>
+		                <div class="uk-form-row">
+	                        <input type="text" class="uk-form-large uk-width-5-6" id="shareUserEmail" placeholder="Enter email addresses" />
+	                        <label class="uk-form-large uk-width-1-6" ><input type="checkbox" id="shareUserEditPermissions"> Can edit</label>
+		                </div>
+		                <div class="uk-form-row uk-margin-small-top mpl-simple-sharing-view">
+		                	<span>
+		                	<label class="uk-form-label" style="width: 100%;">Shared with <span id="numberOfSharedUsers"></span> people <a onclick="showExpandedView()">Show</a></label>
+		                	</span>
+		            	</div>
+		                <div class="uk-form-row mpl-advanced-sharing-view" style="display: none;">
+		                	<label class="uk-form-label" style="width: 100%;">Shared with these people <a onclick="showSimpleView()">Hide</a></label>
+		                </div>
+		                <div class="uk-form-row mpl-advanced-sharing-view" style="display: none;">
+		                	<div class="uk-container" style="height:200px;overflow:scroll;">
+			                	<table class="uk-table uk-table-striped" id="userPermissionsTable">
+			                			<thead>
+			                				<tr>
+			                					<th>User</th>
+			                					<th>Permissions</th>
+			                				</tr>
+			                			</thead>
+	                                   <tbody>
+	                                    <tr>
+	                                        <td><label class="mpl-user-perm-table-row-action-item">Mishal Sanghvi</label></td>
+	                                        <td><input type="checkbox" class="mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox" checked > Can edit</td>
+	                                        <td><button class="uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item" ><i class="uk-icon-trash-o" /> Remove</button></td>
+	                                    </tr>
+	                                    <tr>
+	                                        <td><label class="mpl-user-perm-table-row-action-item">Rahul Saurav</label></td>
+	                                        <td><input type="checkbox" class="mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox"> Can edit</td>
+	                                        <td><button class="uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item" ><i class="uk-icon-trash-o" /> Remove</button></td>
+	                                    </tr>
+	                                </tbody>
+	                            </table>
+                            </div>
+		                </div>
+		              
+		                <div class="uk-modal-footer uk-text-right">
+		                    <button class="uk-button uk-modal-close">Cancel</button>
+		                    <button class="uk-button uk-button-primary" id="shareButton">Share</button>
+		                </div>
+		            </fieldset>
+		        </div>
+		    </div>
+   		</div>
+    </body>
+</html>
