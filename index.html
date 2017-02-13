@@ -2,14 +2,13 @@
 <html>
     <head>
         <title></title>
-       <!--  <link rel="stylesheet" href="custom/css/style.css" /> -->
-        <!-- <link rel="stylesheet" href="custom/css/styles.css" /> -->
+      
         <link rel="stylesheet" href="css/uikit.min.css" />
         <link rel="stylesheet" href="custom/css/theme.css" />
-        <!-- <link rel="stylesheet" href="custom/css/style.css" /> -->
         
         <script src="js/jquery.min.js"></script>
 		<script src="js/uikit.min.js"></script>
+		<script src="js/handlebars.min.js"></script>
 		
 		<script type="text/javascript">
 			function showExpandedView() {
@@ -52,6 +51,20 @@
 
 			//This should go in init
 			$(document).ready(function() {
+
+				var data = {
+					user:[{
+						name: 'Tintin',
+						canEdit: true
+					},{
+						name: 'Captain Haddock'
+					}]
+				};
+				var source = $('#user-perm-table-template').html();
+				var template = Handlebars.compile(source);
+				$('#user-perm-table-container').html(template(data));
+				
+
 				$("#userPermissionsTable").on('click', '.mpl-permissions-remove', function(){
 					var row = $(this).closest('tr');
 					row.attr("disabled", true);
@@ -122,16 +135,41 @@
 					console.log("Shown");
 				})
 
+				
+
 				updateCount();
 				$("#shareUserEditPermissions").prop('disabled', true);
 			})
-
-
-			
 		</script>
+
+		<script id="user-perm-table-template" type="text/x-handlebars-template">
+	    	<table class="uk-table uk-table-striped" id="userPermissionsTable">
+	    		<thead>
+					<tr>
+						<th>User</th>
+						<th>Permissions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each user}}
+					<tr>
+						<td><label class="mpl-user-perm-table-row-action-item">{{name}}</label></td>
+						{{#if canEdit}}
+							<td><input type="checkbox" class="mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox" checked > Can edit</td>
+						{{else}}
+							<td><input type="checkbox" class="mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox" > Can edit</td>
+						{{/if}}
+						<td><button class="uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item" ><i class="uk-icon-trash-o" /> Remove</button></td>
+					</tr>
+					{{/each}}
+				</tbody>
+	    	</table>
+
+    	</script>
 		
     </head>
     <body>
+   
 		
 
     <div class="uk-width-medium-1-2 uk-container-center ">
@@ -165,8 +203,8 @@
 		                	<label class="uk-form-label" style="width: 100%;">Shared with these people <a onclick="showSimpleView()">Hide</a></label>
 		                </div>
 		                <div class="uk-form-row mpl-advanced-sharing-view" style="display: none;">
-		                	<div class="uk-container" style="height:200px;overflow:scroll;">
-			                	<table class="uk-table uk-table-striped" id="userPermissionsTable">
+		                	<div class="uk-container" id="user-perm-table-container" style="height:200px;overflow:scroll;">
+			                	<!-- <table class="uk-table uk-table-striped" id="userPermissionsTable">
 			                			<thead>
 			                				<tr>
 			                					<th>User</th>
@@ -185,7 +223,7 @@
 	                                        <td><button class="uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item" ><i class="uk-icon-trash-o" /> Remove</button></td>
 	                                    </tr>
 	                                </tbody>
-	                            </table>
+	                            </table> -->
                             </div>
 		                </div>
 		              
