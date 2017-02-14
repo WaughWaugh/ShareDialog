@@ -27,6 +27,7 @@
 				$('#shareButton').text('Save changes');
 				$('#shareUserEmail').attr('disabled', true);
 				$('#shareUserEditPermissions').attr('disabled', true);
+				hideEmailValidationMessage();
 
 			}
 
@@ -49,6 +50,49 @@
 				})
 			}
 
+			function isValidEmail(email) {
+			    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			    //[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?
+			    return re.test(email);
+			} 
+
+			function hideEmailValidationMessage() {
+				$('.mpl-email-validation').hide();	
+				$('#shareUserEmail').removeClass('uk-form-danger');	
+				$('#shareUserEmail').removeClass('uk-form-success');
+			}
+
+			function showEmailValidationSuccess(numberOfEmails) {
+				$('#shareUserEmail').removeClass('uk-form-danger');
+				$('#shareUserEmail').addClass('uk-form-success');
+				$('.mpl-email-validation').removeClass('uk-alert-danger');
+				$('.mpl-email-validation').addClass('uk-alert-success');
+				$('.mpl-email-validation').text('Successfully shared with ' + numberOfEmails + ' people');
+				$('.mpl-email-validation').show();
+				setTimeout(function(){
+					$('#shareUserEmail').removeClass('uk-form-success');
+					$('.mpl-email-validation').addClass('uk-animation-reverse').hide();
+				}, 3000);
+			}
+
+			function showEmailValidationError() {
+				$('#shareUserEmail').removeClass('uk-form-success');
+				$('#shareUserEmail').addClass('uk-form-danger');
+				$('.mpl-email-validation').removeClass('uk-alert-success');
+				$('.mpl-email-validation').addClass('uk-alert-danger');
+				$('.mpl-email-validation').text('Please enter valid email address')
+				$('.mpl-email-validation').show();
+			}
+
+			function validateEmail(emails) {
+				var length = emails.length;
+				for(var i = 0; i < length; i++) {
+					if (!isValidEmail(emails[i])) {
+						return false;
+					}
+				}
+				return true;
+			}
 			//This should go in init
 			$(document).ready(function() {
 
@@ -63,6 +107,7 @@
 				var source = $('#user-perm-table-template').html();
 				var template = Handlebars.compile(source);
 				$('#user-perm-table-container').html(template(data));
+				hideEmailValidationMessage();
 				
 
 				$("#userPermissionsTable").on('click', '.mpl-permissions-remove', function(){
@@ -84,32 +129,52 @@
 					} else {
 						$('#shareUserEditPermissions').prop("checked", false);
 						$("#shareUserEditPermissions").prop('disabled', true);
-					} 			
+					} 
+					hideEmailValidationMessage();
+				});
+
+				$('#shareUserEmail').on('click', function(){
+					hideEmailValidationMessage();		
 				});
 
 				$('#shareButton').on('click', function(){
 					if ($('#shareButton').text() === "Share") {
-						var user = $('#shareUserEmail').val();
-						if (user.length === 0) return;
+						var users = $('#shareUserEmail').val();
+						if (users.length === 0) return;
 
-						var userLabel = "<label class='mpl-user-perm-table-row-action-item'>" + user + "</label>";
-
-						 //throw validation error
+						var emails=users.replace(/[\s,]+/g, " ").replace(/[\s;]+/g, " ").toLowerCase().split(" ");
 						var editPermissions = $('#shareUserEditPermissions').is(":checked");
-						var editCheckbox;
+						var numberOfEmails = emails.length;
 
-						if (editPermissions === true) {
-							editCheckbox = "<input type='checkbox' class='mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox' checked> Can edit";
+						var checkIfAllValidEmails = validateEmail(emails);
+						
+						if (checkIfAllValidEmails === false) {
+							showEmailValidationError();
+							return;
 						} else {
-							editCheckbox = "<input type='checkbox' class='mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox'> Can edit";
-						}
+							showEmailValidationSuccess(numberOfEmails);
+							for(var i = 0; i < numberOfEmails; i++) {
 
-						$('#userPermissionsTable').append("<tr>"+ "<td>" + userLabel + "</td>"+ 
+							var userLabel = "<label class='mpl-user-perm-table-row-action-item'>" + emails[i] + "</label>";
+							var editCheckbox;
+
+							if (editPermissions === true) {
+								editCheckbox = "<input type='checkbox' class='mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox' checked> Can edit";
+							} else {
+								editCheckbox = "<input type='checkbox' class='mpl-user-perm-table-row-action-item mpl-user-perm-table-row-action-item-checkbox'> Can edit";
+							}
+
+							$('#userPermissionsTable').append("<tr>"+ "<td>" + userLabel + "</td>"+ 
 							"<td>" + editCheckbox + "</td>"+ 
 							"<td><button class='uk-button mpl-permissions-remove mpl-user-perm-table-row-action-item'><i class='uk-icon-trash-o' /> Remove</button></td>" +
 							"</tr>");
 
-						addUserPermissionChecboxAction();
+							addUserPermissionChecboxAction();
+							}
+						}
+
+						
+						
 
 						$('#shareUserEmail').val('');
 						$('#shareUserEditPermissions').prop("checked", false);
@@ -192,6 +257,7 @@
 	                        <input type="text" class="uk-form-large uk-width-1-1" id="shareUserEmail" placeholder="Enter email addresses" />
 		                </div>
 		                <div class="uk-form-row uk-text-right">
+		                	 <span class="uk-alert mpl-email-validation uk-animation-fade " style="float:left; display: none;"></span>
 		                	 <label class="uk-form-large uk-width-1-6"><input type="checkbox" id="shareUserEditPermissions" > Can edit</label>
 		                </div>
 		                <div class="uk-form-row uk-margin-small-top mpl-simple-sharing-view">
